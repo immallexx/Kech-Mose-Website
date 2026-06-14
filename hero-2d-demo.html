@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0D2626">
+<meta name="robots" content="noindex">
+<title>Hero preview — 2D blueprint — Kech Mose</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Fira+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css">
+<style>
+  /* the 2D blueprint canvas sits between the hero photo (z0) and the hero content (z2) */
+  .hero2d{position:absolute;inset:0;z-index:1;width:100%;height:100%;pointer-events:none}
+  /* unobtrusive "this is a preview" badge */
+  .pvbadge{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9999;
+    background:rgba(10,29,29,.82);backdrop-filter:blur(8px);border:1px solid var(--hair);
+    color:var(--teal-lum);font-family:'Montserrat';font-weight:600;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;padding:9px 16px;border-radius:2px}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<header class="nav scrolled" id="nav">
+  <a class="nav__logo" href="index.html"><img src="assets/img/lockup_white.png" alt="Kech Mose"></a>
+  <nav class="nav__links">
+    <a href="about.html">About</a>
+    <a href="services.html">Services</a>
+    <a href="projects.html">Projects</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+  <a href="contact.html" class="btn">Get Started <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+</header>
+<main id="top">
+<section class="hero">
+  <div class="hero__bg" id="heroBg" style="background-image:url(assets/img/hero.jpg)"></div>
+  <canvas id="hero2d" class="hero2d" aria-hidden="true"></canvas>
+  <div class="hero__inner wrap">
+    <span class="eyebrow">Real Estate &nbsp;&bull;&nbsp; Construction &nbsp;&bull;&nbsp; Investment</span>
+    <h1 style="margin-top:22px"><span>The Future of</span><br><span class="l2">Real Estate</span></h1>
+    <p class="hero__sub">Kech Mose is a forward-thinking real estate, construction and investment company &mdash; closing Nigeria&rsquo;s trust gap with transparency, market intelligence and developments that deliver exactly what they promise.</p>
+    <div class="hero__cta">
+      <a href="projects.html" class="btn">Explore Projects <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a href="about.html" class="btn ghost">The Story</a>
+    </div>
+  </div>
+  <div class="hero__scroll">Move your mouse<span class="line"></span></div>
+</section>
+</main>
+<div class="pvbadge">Preview &middot; 2D blueprint hero</div>
+
+<script>
+(function(){
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var touch  = matchMedia('(hover: none)').matches || 'ontouchstart' in window;
+  var cv = document.getElementById('hero2d'); if(!cv || !cv.getContext) return;
+  var ctx = cv.getContext('2d');
+  var hero = cv.closest('.hero');
+  var dpr = Math.min(window.devicePixelRatio||1, 2);
+  var W=0, H=0, minor=46;
+  var mxN=0.5, myN=0.5, lastMove=-9999;
+  var cx=0, cy=0;                       /* eased crosshair position (px) */
+
+  function size(){
+    W=hero.clientWidth; H=hero.clientHeight;
+    cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    minor=Math.max(40, Math.round(W/28));
+    cx=W*0.5; cy=H*0.45;
+  }
+  function grid(spacing, ox, oy, alpha){
+    ctx.strokeStyle='rgba(111,185,173,'+alpha+')'; ctx.lineWidth=1; ctx.beginPath();
+    var sx=((ox%spacing)+spacing)%spacing, sy=((oy%spacing)+spacing)%spacing, x, y;
+    for(x=sx;x<=W;x+=spacing){ ctx.moveTo(x+0.5,0); ctx.lineTo(x+0.5,H); }
+    for(y=sy;y<=H;y+=spacing){ ctx.moveTo(0,y+0.5); ctx.lineTo(W,y+0.5); }
+    ctx.stroke();
+  }
+  function frame(){
+    requestAnimationFrame(frame);
+    var now=performance.now(), tcx, tcy;
+    if(!touch && now-lastMove<2200){ tcx=mxN*W; tcy=myN*H; }        /* follow the cursor */
+    else { var tt=now*0.0004; tcx=W*(0.5+0.30*Math.cos(tt)); tcy=H*(0.48+0.24*Math.sin(tt*1.3)); } /* idle drift */
+    cx+=(tcx-cx)*0.10; cy+=(tcy-cy)*0.10;
+    var px=cx/W-0.5, py=cy/H-0.5, major=minor*4;
+
+    ctx.clearRect(0,0,W,H);
+    /* two parallax layers — foreground shifts more than background */
+    grid(minor, -px*22, -py*22, 0.06);
+    grid(major, -px*9,  -py*9,  0.13);
+
+    /* spotlight: re-draw the grid brighter inside a radius, with a soft glow */
+    var R=Math.min(280, W*0.22);
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,6.2832); ctx.clip();
+    var g=ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+    g.addColorStop(0,'rgba(111,185,173,0.10)'); g.addColorStop(1,'rgba(111,185,173,0)');
+    ctx.fillStyle=g; ctx.fillRect(cx-R,cy-R,R*2,R*2);
+    grid(minor, -px*22, -py*22, 0.17);
+    grid(major, -px*9,  -py*9,  0.26);
+    ctx.restore();
+
+    /* major-grid intersection nodes light up near the cursor */
+    var ox=-px*9, oy=-py*9, sx=((ox%major)+major)%major, sy=((oy%major)+major)%major, x, y;
+    for(x=sx;x<=W;x+=major){ for(y=sy;y<=H;y+=major){
+      var dx=x-cx, dy=y-cy, d=Math.sqrt(dx*dx+dy*dy);
+      if(d<R){ ctx.fillStyle='rgba(111,185,173,'+(0.55*(1-d/R)).toFixed(3)+')'; ctx.beginPath(); ctx.arc(x,y,2,0,6.2832); ctx.fill(); }
+    }}
+
+    /* drafting crosshair: plumb + level at the cursor */
+    ctx.strokeStyle='rgba(111,185,173,0.48)'; ctx.lineWidth=1; ctx.setLineDash([1,5]);
+    ctx.beginPath(); ctx.moveTo(Math.round(cx)+0.5,0); ctx.lineTo(Math.round(cx)+0.5,H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,Math.round(cy)+0.5); ctx.lineTo(W,Math.round(cy)+0.5); ctx.stroke();
+    ctx.setLineDash([]);
+    /* edge ruler ticks aligned to the cursor */
+    ctx.strokeStyle='rgba(111,185,173,0.8)'; ctx.beginPath();
+    ctx.moveTo(cx+0.5,0); ctx.lineTo(cx+0.5,14); ctx.moveTo(0,cy+0.5); ctx.lineTo(14,cy+0.5); ctx.stroke();
+    /* marker ring + dot */
+    ctx.strokeStyle='rgba(111,185,173,0.9)'; ctx.beginPath(); ctx.arc(cx,cy,5,0,6.2832); ctx.stroke();
+    ctx.fillStyle='rgba(245,243,239,0.95)'; ctx.beginPath(); ctx.arc(cx,cy,1.6,0,6.2832); ctx.fill();
+    /* coordinate readout */
+    ctx.fillStyle='rgba(111,185,173,0.9)'; ctx.font='600 11px Montserrat, sans-serif';
+    ctx.fillText('X '+Math.round(cx)+'   Y '+Math.round(cy), cx+13, cy-11);
+  }
+  function staticFrame(){ ctx.clearRect(0,0,W,H); grid(minor,0,0,0.07); grid(minor*4,0,0,0.14); }
+
+  window.addEventListener('mousemove',function(e){
+    var r=hero.getBoundingClientRect();
+    mxN=(e.clientX-r.left)/r.width; myN=(e.clientY-r.top)/r.height; lastMove=performance.now();
+  });
+  window.addEventListener('resize',function(){ size(); if(reduce) staticFrame(); });
+  size();
+  if(reduce) staticFrame(); else requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
