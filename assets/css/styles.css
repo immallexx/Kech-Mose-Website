@@ -334,8 +334,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
   outline:2px solid var(--teal-lum);outline-offset:3px;border-radius:2px}
 /* Darker ring on light sections for sufficient contrast against ivory */
 .light a:focus-visible,.light button:focus-visible,.light .btn:focus-visible{outline-color:var(--teal)}
-/* Form fields: keep the underline-grow on pointer focus, add an outline for keyboard focus */
-.form input:focus-visible,.form textarea:focus-visible{outline:2px solid var(--teal-lum);outline-offset:2px}
+/* Form fields show focus via the underline + floating-label colour, not a box outline */
+.form input:focus-visible,.form textarea:focus-visible{outline:none}
 /* The skip target shouldn't show a focus ring when it receives programmatic focus */
 main:focus{outline:none}
 @media (prefers-reduced-motion:reduce){ .skip{transition:none} }
