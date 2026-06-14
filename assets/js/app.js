@@ -74,6 +74,9 @@
   }
 
   function buildReveals(){
+    /* release the anti-flicker hide *before* GSAP reads each element's natural opacity as its
+       animation target — otherwise from({opacity:0}) would capture the hidden state and animate 0→0 */
+    document.documentElement.classList.remove('anim');
     if(!hasGSAP||reduce) return;
     gsap.registerPlugin(ScrollTrigger);
     document.querySelectorAll('[data-split]').forEach(function(h){

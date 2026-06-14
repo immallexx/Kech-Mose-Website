@@ -339,3 +339,22 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 /* The skip target shouldn't show a focus ring when it receives programmatic focus */
 main:focus{outline:none}
 @media (prefers-reduced-motion:reduce){ .skip{transition:none} }
+
+/* PAGE TRANSITIONS + ANTI-FLICKER */
+/* Dark root so there's never a white flash between page loads */
+html{background-color:var(--forest)}
+/* Smooth cross-fade between same-origin pages (supported browsers; harmless elsewhere) */
+@view-transition{ navigation: auto; }
+::view-transition-old(root),::view-transition-new(root){ animation-duration:.34s; animation-timing-function:cubic-bezier(.22,.61,.36,1); }
+/* Hide scroll-reveal targets until JS sets their GSAP start-state — stops the flash of content
+   that would otherwise paint, then jump to hidden, then animate in. The <head> script adds
+   `anim` before first paint and a failsafe removes it, so content always appears even if JS,
+   GSAP, or motion is unavailable. */
+html.anim [data-reveal],
+html.anim [data-split]{opacity:0}
+html.anim [data-img]{clip-path:inset(0 0 100% 0)}
+@media (prefers-reduced-motion:reduce){
+  html.anim [data-reveal],
+  html.anim [data-split]{opacity:1}
+  html.anim [data-img]{clip-path:none}
+}
